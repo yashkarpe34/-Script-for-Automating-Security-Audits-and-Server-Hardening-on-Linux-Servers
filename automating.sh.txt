@@ -1,0 +1,44 @@
+CONFIG_FILE="./config/custom_checks.conf"
+[[ -f "$CONFIG_FILE" ]] && source "$CONFIG_FILE"
+
+
+REPORT="audit_report_$(date +%F).log"
+echo "Linux Security Audit Report - $(date)" > $REPORT
+
+function audit_users_groups() {
+    echo -e "\n[+] User and Group Audits" | tee -a $REPORT
+    echo "All users:" >> $REPORT
+    cut -d: -f1 /etc/passwd >> $REPORT
+    echo "Users with UID 0 (root):" >> $REPORT
+    awk -F: '($3 == 0) {print $1}' /etc/passwd >> $REPORT
+    echo "Users without password:" >> $REPORT
+    awk -F: '($2 == "" || $2 == "*" || $2 == "!!") {print $1}' /etc/shadow >> $REPORT
+}
+
+function audit_firewall() {
+    echo -e "\n[+] Firewall and Network Security" | tee -a $REPORT
+    echo "UFW status:" >> $REPORT
+    ufw status verbose >> $REPORT 2>/dev/null || echo "UFW not installed" >> $REPORT
+    echo "IP Forwarding:" >> $REPORT
+    sysctl net.ipv4.ip_forward >> $REPORT
+}
+
+function monitor_logs() {
+    echo -e "\n[+] Log Monitoring" | tee -a $REPORT
+    echo "Recent SSH login attempts:" >> $REPORT
+    journalctl -u ssh -n 50 >> $REPORT
+}
+
+function finalize_report() {
+    echo -e "\n[+] Audit complete. Report saved to $REPORT"
+    cat $REPORT
+}
+
+function run_all() {
+    audit_users_groups
+    audit_firewall
+    monitor_logs
+    finalize_report
+}
+
+runs_all
