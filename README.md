@@ -24,7 +24,7 @@ DISABLE_IPV6="yes"
 
 AUTO_UPDATES="yes"
 
-ALERT_EMAIL="admin@example.com"
+ALERT_EMAIL="yashkarpe34@gmail.com"
 
 
 
